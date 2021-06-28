@@ -24,7 +24,7 @@ vaccined_histroy.createOrReplaceTempView('vaccined_histroy_view')
 # COMMAND ----------
 
 vaccined_fully = spark.sql("""
-select County, `People Fully Vaccinated - Federal`+`People Fully Vaccinated - NC` as `People Fully Vaccinated By County`
+select County, `People Fully Vaccinated - Federal`+`People Fully Vaccinated - NC` as `People Fully Vaccinated`
 from vaccined_histroy_view
 order by `People Fully Vaccinated - NC` desc
 """)
@@ -33,7 +33,7 @@ vaccined_fully.display()
 # COMMAND ----------
 
 vaccined_at_least_one = spark.sql("""
-select County, `People Vaccinated with at Least One Dose - Federal`+`People Vaccinated with at Least One Dose - NC` as `People Vaccinated with at Least One Dose By County`
+select County, `People Vaccinated with at Least One Dose - Federal`+`People Vaccinated with at Least One Dose - NC` as `People Vaccinated with at Least One Dose`
 from vaccined_histroy_view
 order by `People Fully Vaccinated - Federal` desc
 """)
@@ -86,7 +86,7 @@ nc_counties_long_lat.display()
 
 # COMMAND ----------
 
-vaccinated_record = vaccined_fully.join(vaccined_at_least_one, vaccined_fully.County == vaccined_at_least_one.County, 'inner').select(vaccined_fully.County, 'People Fully Vaccinated By County', 'People Vaccinated with at Least One Dose By County')
+vaccinated_record = vaccined_fully.join(vaccined_at_least_one, vaccined_fully.County == vaccined_at_least_one.County, 'inner').select(vaccined_fully.County, 'People Fully Vaccinated', 'People Vaccinated with at Least One Dose')
 vaccinated_record.display()
 vaccinated_record.createOrReplaceTempView('vaccinated_record_view')
 
@@ -124,7 +124,7 @@ import altair as alt
 
 # COMMAND ----------
 
-People_Vaccinated_Record_With_NC_County_Map_Data = People_Vaccinated_Record_With_NC_County_long_lat.select('County','GEOID','`People Fully Vaccinated By County`','`People Vaccinated with at Least One Dose By County`')
+People_Vaccinated_Record_With_NC_County_Map_Data = People_Vaccinated_Record_With_NC_County_long_lat.select('County','GEOID','`People Fully Vaccinated`','`People Vaccinated with at Least One Dose`')
 People_Vaccinated_Record_With_NC_County_Map_Data.display()
 People_Vaccinated_Record_With_NC_County_Map_Data = People_Vaccinated_Record_With_NC_County_Map_Data.toPandas()
 
@@ -153,14 +153,14 @@ def map_nc(counties, data):
   base_state_counties = alt.Chart(us_counties).mark_geoshape(
   ).transform_lookup(
     lookup='id',
-    from_=alt.LookupData(data, 'GEOID', ['County', 'GEOID', 'People Fully Vaccinated By County','People Vaccinated with at Least One Dose By County'])
+    from_=alt.LookupData(data, 'GEOID', ['County', 'GEOID', 'People Fully Vaccinated','People Vaccinated with at Least One Dose'])
   ).encode(
-    color=alt.Color('People Fully Vaccinated By County:Q', scale=alt.Scale(type='log', domain=[1000, 200000]), title='Vaccinated'),
+    color=alt.Color('People Fully Vaccinated:Q', scale=alt.Scale(type='log', domain=[1000, 200000]), title='Vaccinated'),
     tooltip=[
       alt.Tooltip('GEOID:O'),
       alt.Tooltip('County:N'),
-      alt.Tooltip('People Fully Vaccinated By County:Q'),
-      alt.Tooltip('People Vaccinated with at Least One Dose By County:Q'),
+      alt.Tooltip('People Fully Vaccinated:Q'),
+      alt.Tooltip('People Vaccinated with at Least One Dose:Q'),
     ],
   ).properties(
     #figure title
