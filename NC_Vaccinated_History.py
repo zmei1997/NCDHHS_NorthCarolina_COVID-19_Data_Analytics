@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # North Carolina Poeple Vaccinated By County
+# MAGIC # North Carolina People Vaccinated By County
 # MAGIC Notes: <br>
 # MAGIC Federal: Vaccinated from Federal Pharmacy Programs <br>
 # MAGIC NC: Vaccinated from NC Providers
@@ -10,6 +10,23 @@
 # COMMAND ----------
 
 vaccined_histroy = spark.read.csv('dbfs:/FileStore/tables/People_Vaccinated_by_County_Full_Data.csv', header=True, inferSchema=True)
+
+# COMMAND ----------
+
+vaccined_histroy.printSchema()
+
+# COMMAND ----------
+
+Total_Doses_Administered_By_County = spark.read.csv('dbfs:/FileStore/tables/Doses_By_County_Full_Data.csv', header=True, inferSchema=True)
+
+# COMMAND ----------
+
+Total_Doses_Administered_By_County.printSchema()
+
+# COMMAND ----------
+
+Total_Doses_Administered_By_County.display()
+Total_Doses_Administered_By_County.createOrReplaceTempView('total_Doses_Administered_view')
 
 # COMMAND ----------
 
@@ -24,10 +41,18 @@ vaccined_histroy.createOrReplaceTempView('vaccined_histroy_view')
 # COMMAND ----------
 
 vaccined_fully = spark.sql("""
-select County, `People Fully Vaccinated - Federal`+`People Fully Vaccinated - NC` as `People Fully Vaccinated`
-from vaccined_histroy_view
+select vv.County, `People Fully Vaccinated - Federal`+`People Fully Vaccinated - NC` as `People Fully Vaccinated`, `Total Doses Administered`
+from vaccined_histroy_view vv inner join total_Doses_Administered_view tv on vv.County = tv.County
 order by `People Fully Vaccinated - NC` desc
 """)
+vaccined_fully.display()
+
+# COMMAND ----------
+
+from pyspark.sql.functions import col
+from pyspark.sql.functions import ceil
+vaccined_fully = vaccined_fully.withColumn('Percentage of Fully Vaccinated', col('`People Fully Vaccinated`')/ col('`Total Doses Administered`')*100)
+vaccined_fully = vaccined_fully.select('County', '`People Fully Vaccinated`', '`Total Doses Administered`', ceil(col('`Percentage of Fully Vaccinated`')).alias('Percentage of Fully Vaccinated (%)'))
 vaccined_fully.display()
 
 # COMMAND ----------
@@ -86,7 +111,7 @@ nc_counties_long_lat.display()
 
 # COMMAND ----------
 
-vaccinated_record = vaccined_fully.join(vaccined_at_least_one, vaccined_fully.County == vaccined_at_least_one.County, 'inner').select(vaccined_fully.County, 'People Fully Vaccinated', 'People Vaccinated with at Least One Dose')
+vaccinated_record = vaccined_fully.join(vaccined_at_least_one, vaccined_fully.County == vaccined_at_least_one.County, 'inner').select(vaccined_fully.County, 'People Vaccinated with at Least One Dose', 'People Fully Vaccinated', 'Total Doses Administered', 'Percentage of Fully Vaccinated (%)')
 vaccinated_record.display()
 vaccinated_record.createOrReplaceTempView('vaccinated_record_view')
 
@@ -124,7 +149,7 @@ import altair as alt
 
 # COMMAND ----------
 
-People_Vaccinated_Record_With_NC_County_Map_Data = People_Vaccinated_Record_With_NC_County_long_lat.select('County','GEOID','`People Fully Vaccinated`','`People Vaccinated with at Least One Dose`')
+People_Vaccinated_Record_With_NC_County_Map_Data = People_Vaccinated_Record_With_NC_County_long_lat.select('County','GEOID','`People Vaccinated with at Least One Dose`', '`People Fully Vaccinated`', 'Total Doses Administered', 'Percentage of Fully Vaccinated (%)')
 People_Vaccinated_Record_With_NC_County_Map_Data.display()
 People_Vaccinated_Record_With_NC_County_Map_Data = People_Vaccinated_Record_With_NC_County_Map_Data.toPandas()
 
@@ -153,14 +178,16 @@ def map_nc(counties, data):
   base_state_counties = alt.Chart(us_counties).mark_geoshape(
   ).transform_lookup(
     lookup='id',
-    from_=alt.LookupData(data, 'GEOID', ['County', 'GEOID', 'People Fully Vaccinated','People Vaccinated with at Least One Dose'])
+    from_=alt.LookupData(data, 'GEOID', ['County', 'GEOID', 'People Vaccinated with at Least One Dose', 'People Fully Vaccinated', 'Total Doses Administered', 'Percentage of Fully Vaccinated (%)'])
   ).encode(
-    color=alt.Color('People Fully Vaccinated:Q', scale=alt.Scale(type='log', domain=[1000, 200000]), title='Vaccinated'),
+    color=alt.Color('People Fully Vaccinated:Q', scale=alt.Scale(type='log', domain=[1000, 1000000]), title='Vaccinated'),
     tooltip=[
       alt.Tooltip('GEOID:O'),
       alt.Tooltip('County:N'),
-      alt.Tooltip('People Fully Vaccinated:Q'),
       alt.Tooltip('People Vaccinated with at Least One Dose:Q'),
+      alt.Tooltip('People Fully Vaccinated:Q'),
+      alt.Tooltip('Total Doses Administered:Q'),
+      alt.Tooltip('Percentage of Fully Vaccinated (%):Q'),
     ],
   ).properties(
     #figure title
