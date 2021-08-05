@@ -204,22 +204,23 @@ map_nc(nc_counties, People_Vaccinated_Record_With_NC_County_Map_Data)
 
 # MAGIC %md
 # MAGIC ## Daily Vaccinated in North Carolina
-# MAGIC #### Data updated on July, 2, 2021
+# MAGIC #### Data updated on Aug, 5, 2021
 
 # COMMAND ----------
 
-us_daily_vaccinated = spark.read.csv('dbfs:/FileStore/tables/us_state_vaccinations.csv', header=True, inferSchema=True)
+us_daily_vaccinated = spark.read.csv('dbfs:/FileStore/tables/people_vaccinated_us_timeline.csv', header=True, inferSchema=True)
 us_daily_vaccinated.display()
 
 # COMMAND ----------
 
-nc_daily_vaccinated = us_daily_vaccinated.where(us_daily_vaccinated.location == 'North Carolina').where(us_daily_vaccinated.date >= )
+nc_daily_vaccinated = us_daily_vaccinated.where(us_daily_vaccinated.Province_State == 'North Carolina').where(us_daily_vaccinated.Date >= '2021-01-01')
 nc_daily_vaccinated.display()
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ### Daily Vaccinated in North Carolina (Year 2021)
+# MAGIC #### Data updated on Aug, 5, 2021
 
 # COMMAND ----------
 
@@ -229,10 +230,11 @@ nc_daily_vaccinated.display()
 
 # MAGIC %md
 # MAGIC ### Daily Vaccinated in North Carolina (Since May, 2021)
+# MAGIC #### Data updated on Aug, 5, 2021
 
 # COMMAND ----------
 
-nc_daily_vaccinated_since_may = nc_daily_vaccinated.where(nc_daily_vaccinated.date > '2021-05-01')
+nc_daily_vaccinated_since_may = nc_daily_vaccinated.where(nc_daily_vaccinated.Date > '2021-05-01')
 nc_daily_vaccinated_since_may.display()
 
 # COMMAND ----------
