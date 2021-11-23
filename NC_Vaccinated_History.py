@@ -13,6 +13,11 @@ vaccined_histroy = spark.read.csv('dbfs:/FileStore/tables/People_Vaccinated_by_C
 
 # COMMAND ----------
 
+for row in vaccined_histroy.collect():
+  print(row.County)
+
+# COMMAND ----------
+
 vaccined_histroy.printSchema()
 
 # COMMAND ----------
@@ -132,16 +137,16 @@ nc_counties_long_lat.createOrReplaceTempView('nc_counties_long_lat_view')
 
 # COMMAND ----------
 
+# MAGIC %pip install altair
+
+# COMMAND ----------
+
 People_Vaccinated_Record_With_NC_County_long_lat = spark.sql("""
 select *
 from vaccinated_record_view v inner join nc_counties_long_lat_view c on v.County = c.Name
 """)
 People_Vaccinated_Record_With_NC_County_long_lat = People_Vaccinated_Record_With_NC_County_long_lat.drop('USPS', 'Name')
 People_Vaccinated_Record_With_NC_County_long_lat.display()
-
-# COMMAND ----------
-
-# MAGIC %pip install altair
 
 # COMMAND ----------
 
@@ -204,7 +209,7 @@ map_nc(nc_counties, People_Vaccinated_Record_With_NC_County_Map_Data)
 
 # MAGIC %md
 # MAGIC ## Daily Vaccinated in North Carolina (Since Year 2020)
-# MAGIC #### Data updated on Oct, 01, 2021
+# MAGIC #### Data updated on Nov, 23, 2021
 
 # COMMAND ----------
 
@@ -226,7 +231,7 @@ nc_daily_vaccinated.display()
 
 # MAGIC %md
 # MAGIC ### Daily Vaccinated in North Carolina (Year 2021)
-# MAGIC #### Data updated on Oct, 01, 2021
+# MAGIC #### Data updated on Nov, 23, 2021
 
 # COMMAND ----------
 
@@ -236,7 +241,7 @@ nc_daily_vaccinated.display()
 
 # MAGIC %md
 # MAGIC ### Daily Vaccinated in North Carolina (last 1 months)
-# MAGIC #### Data updated on Oct, 01, 2021
+# MAGIC #### Data updated on Nov, 23, 2021
 
 # COMMAND ----------
 
