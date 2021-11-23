@@ -15,5 +15,3 @@
 [IPython Notebook Version](https://github.com/zmei1997/NCDHHS_NorthCarolina_COVID-19_Data_Analytics/blob/main/NC_Vaccinated_History.ipynb)
  |  [Python source file](https://github.com/zmei1997/NCDHHS_NorthCarolina_COVID-19_Data_Analytics/blob/main/NC_Vaccinated_History.py)<br>
 [Databricks Notebook Version](https://github.com/zmei1997/NCDHHS_NorthCarolina_COVID-19_Data_Analytics/blob/main/NC_Vaccinated_History.dbc)<br>
-
-##### Updated on 10/01/2021
